@@ -14,7 +14,7 @@
 ##     Forked from https://github.com/jackyaz/spdMerlin     ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2026-Jan-05
+# Last Modified: 2026-Mar-21
 #-------------------------------------------------------------
 
 ##############        Shellcheck directives      #############
@@ -38,9 +38,9 @@
 ### Start of script variables ###
 readonly SCRIPT_NAME="spdMerlin"
 readonly SCRIPT_NAME_LOWER="$(echo "$SCRIPT_NAME" | tr 'A-Z' 'a-z')"
-readonly SCRIPT_VERSION="v4.4.17"
-readonly SCRIPT_VERSTAG="26010522"
-SCRIPT_BRANCH="master"
+readonly SCRIPT_VERSION="v4.4.18"
+readonly SCRIPT_VERSTAG="26032122"
+SCRIPT_BRANCH="develop"
 SCRIPT_REPO="https://raw.githubusercontent.com/AMTM-OSR/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME_LOWER.d"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink -f /www/user)"
@@ -74,6 +74,9 @@ readonly ENDIN_MenuAddOnsTag="/\*\*ENDIN:_AddOns_\*\*/"
 readonly branchxStr_TAG="[Branch: $SCRIPT_BRANCH]"
 readonly versionDev_TAG="${SCRIPT_VERSION}_${SCRIPT_VERSTAG}"
 readonly versionMod_TAG="$SCRIPT_VERSION on $ROUTER_MODEL"
+
+# To support automatic script updates from AMTM #
+doScriptUpdateFromAMTM=true
 
 # For daily CRON job to trim database #
 readonly defTrimDB_Hour=3
@@ -314,9 +317,11 @@ Update_Version()
 		localver="$(echo "$updatecheckresult" | cut -f2 -d',')"
 		serverver="$(echo "$updatecheckresult" | cut -f3 -d',')"
 		
-		if [ "$isupdate" = "version" ]; then
+		if [ "$isupdate" = "version" ]
+		then
 			Print_Output true "New version of $SCRIPT_NAME available - $serverver" "$PASS"
-		elif [ "$isupdate" = "md5" ]; then
+		elif [ "$isupdate" = "md5" ]
+		then
 			Print_Output true "MD5 hash of $SCRIPT_NAME does not match - hotfix available - $serverver" "$PASS"
 		fi
 		
@@ -380,6 +385,23 @@ Update_Version()
 		fi
 		exit 0
 	fi
+}
+
+##-------------------------------------##
+## Added by Martinski W. [2026-Feb-18] ##
+##-------------------------------------##
+ScriptUpdateFromAMTM()
+{
+    if ! "$doScriptUpdateFromAMTM"
+    then
+        printf "Automatic script updates via AMTM are currently disabled.\n\n"
+        return 1
+    fi
+    if [ $# -gt 0 ] && [ "$1" = "check" ]
+    then return 0
+    fi
+    Update_Version force unattended
+    return "$?"
 }
 
 ##-------------------------------------##
@@ -3968,11 +3990,17 @@ Generate_LastXResults()
 	if [ $# -gt 1 ] && [ -n "$2" ] ; then glxIndx="$2" ; fi
 
 	{
-	   echo ".mode csv"
-	   echo ".output /tmp/spdMerlin-lastx.csv"
-	   echo "PRAGMA temp_store=1;"
-	   echo "SELECT [Timestamp],[Download],[Upload],[Latency],[Jitter],[PktLoss],[DataDownload],[DataUpload],[ResultURL],[ServerID],[ServerName] FROM spdstats_$1 ORDER BY [Timestamp] DESC LIMIT $(LastXResults check);" 
-    } > /tmp/spdMerlin-lastx.sql
+	    echo ".mode csv"
+	    echo ".output /tmp/spdMerlin-lastx.csv"
+	    echo "PRAGMA temp_store=1;"
+	    echo "SELECT [Timestamp],"
+	    echo "printf('%.2f', Download) AS DownloadValue,"
+	    echo "printf('%.2f', Upload) AS UploadValue,"
+	    echo "printf('%.2f', Latency) AS LatencyValue,"
+	    echo "printf('%.2f', Jitter) AS JitterValue,"
+	    echo "[PktLoss],[DataDownload],[DataUpload],[ResultURL],[ServerID],[ServerName]"
+	    echo "FROM spdstats_$1 ORDER BY [Timestamp] DESC LIMIT $(LastXResults check);"
+	} > /tmp/spdMerlin-lastx.sql
 	_ApplyDatabaseSQLCmds_ /tmp/spdMerlin-lastx.sql "glx$glxIndx"
 	rm -f /tmp/spdMerlin-lastx.sql
 
@@ -6810,7 +6838,7 @@ then
 fi
 
 ##----------------------------------------##
-## Modified by Martinski W. [2025-Jul-11] ##
+## Modified by Martinski W. [2026-Feb-18] ##
 ##----------------------------------------##
 case "$1" in
 	install)
@@ -6957,6 +6985,11 @@ case "$1" in
 	forceupdate)
 		Update_Version force
 		exit 0
+	;;
+	amtmupdate)
+		shift
+		ScriptUpdateFromAMTM "$@"
+		exit "$?"
 	;;
 	postupdate)
 		Create_Dirs
