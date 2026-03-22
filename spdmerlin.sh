@@ -14,7 +14,7 @@
 ##     Forked from https://github.com/jackyaz/spdMerlin     ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2026-Feb-18
+# Last Modified: 2026-Mar-21
 #-------------------------------------------------------------
 
 ##############        Shellcheck directives      #############
@@ -39,7 +39,7 @@
 readonly SCRIPT_NAME="spdMerlin"
 readonly SCRIPT_NAME_LOWER="$(echo "$SCRIPT_NAME" | tr 'A-Z' 'a-z')"
 readonly SCRIPT_VERSION="v4.4.18"
-readonly SCRIPT_VERSTAG="26021800"
+readonly SCRIPT_VERSTAG="26032122"
 SCRIPT_BRANCH="develop"
 SCRIPT_REPO="https://raw.githubusercontent.com/AMTM-OSR/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME_LOWER.d"
@@ -3990,11 +3990,17 @@ Generate_LastXResults()
 	if [ $# -gt 1 ] && [ -n "$2" ] ; then glxIndx="$2" ; fi
 
 	{
-	   echo ".mode csv"
-	   echo ".output /tmp/spdMerlin-lastx.csv"
-	   echo "PRAGMA temp_store=1;"
-	   echo "SELECT [Timestamp],[Download],[Upload],[Latency],[Jitter],[PktLoss],[DataDownload],[DataUpload],[ResultURL],[ServerID],[ServerName] FROM spdstats_$1 ORDER BY [Timestamp] DESC LIMIT $(LastXResults check);" 
-    } > /tmp/spdMerlin-lastx.sql
+	    echo ".mode csv"
+	    echo ".output /tmp/spdMerlin-lastx.csv"
+	    echo "PRAGMA temp_store=1;"
+	    echo "SELECT [Timestamp],"
+	    echo "printf('%.2f', Download) AS DownloadValue,"
+	    echo "printf('%.2f', Upload) AS UploadValue,"
+	    echo "printf('%.2f', Latency) AS LatencyValue,"
+	    echo "printf('%.2f', Jitter) AS JitterValue,"
+	    echo "[PktLoss],[DataDownload],[DataUpload],[ResultURL],[ServerID],[ServerName]"
+	    echo "FROM spdstats_$1 ORDER BY [Timestamp] DESC LIMIT $(LastXResults check);"
+	} > /tmp/spdMerlin-lastx.sql
 	_ApplyDatabaseSQLCmds_ /tmp/spdMerlin-lastx.sql "glx$glxIndx"
 	rm -f /tmp/spdMerlin-lastx.sql
 
