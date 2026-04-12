@@ -14,7 +14,7 @@
 ##     Forked from https://github.com/jackyaz/spdMerlin     ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2026-Mar-21
+# Last Modified: 2026-Apr-11
 #-------------------------------------------------------------
 
 ##############        Shellcheck directives      #############
@@ -38,9 +38,9 @@
 ### Start of script variables ###
 readonly SCRIPT_NAME="spdMerlin"
 readonly SCRIPT_NAME_LOWER="$(echo "$SCRIPT_NAME" | tr 'A-Z' 'a-z')"
-readonly SCRIPT_VERSION="v4.4.18"
-readonly SCRIPT_VERSTAG="26032122"
-SCRIPT_BRANCH="master"
+readonly SCRIPT_VERSION="v4.4.19"
+readonly SCRIPT_VERSTAG="26041103"
+SCRIPT_BRANCH="develop"
 SCRIPT_REPO="https://raw.githubusercontent.com/AMTM-OSR/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME_LOWER.d"
 readonly SCRIPT_WEBPAGE_DIR="$(readlink -f /www/user)"
@@ -99,6 +99,9 @@ readonly SHARE_TEMP_DIR="/opt/share/tmp"
 readonly sqlDBLogFileSize=102400
 readonly sqlDBLogDateTime="%Y-%m-%d %H:%M:%S"
 readonly sqlDBLogFileName="${SCRIPT_NAME}_DBSQL_DEBUG.LOG"
+
+# Workaround for Entware ELF binaries compiled with RUNPATH #
+unset LD_LIBRARY_PATH
 
 # Give priority to built-in binaries #
 export PATH="/bin:/usr/bin:/sbin:/usr/sbin:$PATH"
