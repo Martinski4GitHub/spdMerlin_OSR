@@ -14,7 +14,7 @@
 ##     Forked from https://github.com/jackyaz/spdMerlin     ##
 ##                                                          ##
 ##############################################################
-# Last Modified: 2026-Apr-11
+# Last Modified: 2026-Apr-15
 #-------------------------------------------------------------
 
 ##############        Shellcheck directives      #############
@@ -38,8 +38,8 @@
 ### Start of script variables ###
 readonly SCRIPT_NAME="spdMerlin"
 readonly SCRIPT_NAME_LOWER="$(echo "$SCRIPT_NAME" | tr 'A-Z' 'a-z')"
-readonly SCRIPT_VERSION="v4.4.19"
-readonly SCRIPT_VERSTAG="26041103"
+readonly SCRIPT_VERSION="v4.4.20"
+readonly SCRIPT_VERSTAG="26041500"
 SCRIPT_BRANCH="develop"
 SCRIPT_REPO="https://raw.githubusercontent.com/AMTM-OSR/$SCRIPT_NAME/$SCRIPT_BRANCH"
 readonly SCRIPT_DIR="/jffs/addons/$SCRIPT_NAME_LOWER.d"
@@ -1058,7 +1058,7 @@ Conf_Exists()
 {
 	local AUTOMATEDopt  delCRON=false
 
-	if [ -f "$SCRIPT_CONF" ]
+	if [ -s "$SCRIPT_CONF" ]
 	then
 		dos2unix "$SCRIPT_CONF"
 		chmod 0644 "$SCRIPT_CONF"
@@ -1248,7 +1248,7 @@ Auto_ServiceEvent()
 	local theScriptFilePath="/jffs/scripts/$SCRIPT_NAME_LOWER"
 	case $1 in
 		create)
-			if [ -f /jffs/scripts/service-event ]
+			if [ -s /jffs/scripts/service-event ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)"
 				STARTUPLINECOUNTEX="$(grep -cx 'if echo "$2" | /bin/grep -qE "('"$SCRIPT_NAME_LOWER"'|vpnclient)" ; then { '"$theScriptFilePath"' service_event "$@" & }; fi # '"$SCRIPT_NAME" /jffs/scripts/service-event)"
@@ -1269,14 +1269,15 @@ Auto_ServiceEvent()
 				  echo 'if echo "$2" | /bin/grep -qE "('"$SCRIPT_NAME_LOWER"'|vpnclient)" ; then { '"$theScriptFilePath"' service_event "$@" & }; fi # '"$SCRIPT_NAME"
 				  echo
 				} > /jffs/scripts/service-event
-				chmod 0755 /jffs/scripts/service-event
 			fi
+			chmod 0755 /jffs/scripts/service-event
 		;;
 		delete)
-			if [ -f /jffs/scripts/service-event ]
+			if [ -s /jffs/scripts/service-event ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/service-event)"
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				if [ "$STARTUPLINECOUNT" -gt 0 ]
+				then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/service-event
 				fi
 			fi
@@ -1318,9 +1319,11 @@ Auto_OpenVPN_Event()
 	case $1 in
 		create)
 			# Check if any OpenVPN Client is set up/available in NVRAM #
-			if ! _CheckForOpenVPN_ClientsAvailable_ ; then return 1 ; fi
+			if ! _CheckForOpenVPN_ClientsAvailable_
+			then return 1
+			fi
 
-			if [ -f /jffs/scripts/openvpn-event ]
+			if [ -s /jffs/scripts/openvpn-event ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/openvpn-event)"
                 STARTUPLINECOUNTEX="$(grep -cx '\[ -x '"$theScriptFilePath"' \] && '"$theScriptFilePath"' openvpn_event "$1" "$script_type" & # '"$SCRIPT_NAME" /jffs/scripts/openvpn-event)"
@@ -1341,14 +1344,15 @@ Auto_OpenVPN_Event()
 				  echo '[ -x '"$theScriptFilePath"' ] && '"$theScriptFilePath"' openvpn_event "$1" "$script_type" & # '"$SCRIPT_NAME"
                   echo
 				} > /jffs/scripts/openvpn-event
-				chmod 0755 /jffs/scripts/openvpn-event
 			fi
+			chmod 0755 /jffs/scripts/openvpn-event
 		;;
 		delete)
-			if [ -f /jffs/scripts/openvpn-event ]
+			if [ -s /jffs/scripts/openvpn-event ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/openvpn-event)"
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				if [ "$STARTUPLINECOUNT" -gt 0 ]
+				then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/openvpn-event
 				fi
 			fi
@@ -1396,12 +1400,14 @@ Auto_WG_ClientEvent()
 	case $1 in
 		create)
 			# Check if any WireGuard Client is set up/available in NVRAM #
-			if ! _CheckForWireGuard_ClientsAvailable_ ; then return 1 ; fi
+			if ! _CheckForWireGuard_ClientsAvailable_
+			then return 1
+			fi
 
             for wgClientEvent in stop start
             do
 				wgClientFilePath="/jffs/scripts/wgclient-$wgClientEvent"
-				if [ -f "$wgClientFilePath" ]
+				if [ -s "$wgClientFilePath" ]
 				then
 					STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" "$wgClientFilePath")"
                 	STARTUPLINECOUNTEX="$(grep -cx '\[ -x '"$theScriptFilePath"' \] && '"$theScriptFilePath"' wgclient_event '"$wgClientEvent"' "$@" & # '"$SCRIPT_NAME" "$wgClientFilePath")"
@@ -1422,18 +1428,19 @@ Auto_WG_ClientEvent()
 					  echo '[ -x '"$theScriptFilePath"' ] && '"$theScriptFilePath"' wgclient_event '"$wgClientEvent"' "$@" & # '"$SCRIPT_NAME"
                 	  echo
 					} > "$wgClientFilePath"
-					chmod 0755 "$wgClientFilePath"
 				fi
+				chmod 0755 "$wgClientFilePath"
 			done
 		;;
 		delete)
 			for wgClientEvent in stop start
 			do
 				wgClientFilePath="/jffs/scripts/wgclient-$wgClientEvent"
-				if [ -f "$wgClientFilePath" ]
+				if [ -s "$wgClientFilePath" ]
 				then
 					STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" "$wgClientFilePath")"
-					if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+					if [ "$STARTUPLINECOUNT" -gt 0 ]
+					then
 						sed -i -e '/# '"$SCRIPT_NAME"'/d' "$wgClientFilePath"
 					fi
 				fi
@@ -1450,14 +1457,15 @@ Auto_Startup()
 	local theScriptFilePath="/jffs/scripts/$SCRIPT_NAME_LOWER"
 	case $1 in
 		create)
-			if [ -f /jffs/scripts/services-start ]
+			if [ -s /jffs/scripts/services-start ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)"
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				if [ "$STARTUPLINECOUNT" -gt 0 ]
+				then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 				fi
 			fi
-			if [ -f /jffs/scripts/post-mount ]
+			if [ -s /jffs/scripts/post-mount ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)"
 				STARTUPLINECOUNTEX="$(grep -cx '\[ -x "${1}/entware/bin/opkg" \] && \[ -x '"$theScriptFilePath"' \] && '"$theScriptFilePath"' startup "$@" & # '"$SCRIPT_NAME" /jffs/scripts/post-mount)"
@@ -1479,21 +1487,23 @@ Auto_Startup()
 				  echo '[ -x "${1}/entware/bin/opkg" ] && [ -x '"$theScriptFilePath"' ] && '"$theScriptFilePath"' startup "$@" & # '"$SCRIPT_NAME"
 				  echo
 				} > /jffs/scripts/post-mount
-				chmod 0755 /jffs/scripts/post-mount
 			fi
+			chmod 0755 /jffs/scripts/post-mount
 		;;
 		delete)
-			if [ -f /jffs/scripts/services-start ]
+			if [ -s /jffs/scripts/services-start ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/services-start)"
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				if [ "$STARTUPLINECOUNT" -gt 0 ]
+				then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/services-start
 				fi
 			fi
-			if [ -f /jffs/scripts/post-mount ]
+			if [ -s /jffs/scripts/post-mount ]
 			then
 				STARTUPLINECOUNT="$(grep -c '# '"$SCRIPT_NAME" /jffs/scripts/post-mount)"
-				if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+				if [ "$STARTUPLINECOUNT" -gt 0 ]
+				then
 					sed -i -e '/# '"$SCRIPT_NAME"'/d' /jffs/scripts/post-mount
 				fi
 			fi
@@ -1510,9 +1520,11 @@ Auto_Cron()
 	case $1 in
 		create)
 			STARTUPLINECOUNT="$(cru l | grep -c "#${SCRIPT_NAME}#")"
-			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+			if [ "$STARTUPLINECOUNT" -gt 0 ]
+			then
 				cru d "${SCRIPT_NAME}"
 			fi
+
 			STARTUPLINECOUNTGEN="$(cru l | grep -c "${SCRIPT_NAME}_generate")"
 			CRU_SCHHOUR="$(_GetConfigParam_ SCHHOURS '*')"
 			CRU_SCHMINS="$(_GetConfigParam_ SCHMINS '12,42')"
@@ -1535,21 +1547,25 @@ Auto_Cron()
 				cru d "${SCRIPT_NAME}_trimDB"
 				STARTUPLINECOUNTTRIM="$(cru l | grep -c "${SCRIPT_NAME}_trimDB")"
 			fi
-			if [ "$STARTUPLINECOUNTTRIM" -eq 0 ]; then
+			if [ "$STARTUPLINECOUNTTRIM" -eq 0 ]
+			then
 				cru a "${SCRIPT_NAME}_trimDB" "$defTrimDB_Mins $defTrimDB_Hour * * * $theScriptFilePath trimdb"
 			fi
 		;;
 		delete)
 			STARTUPLINECOUNT="$(cru l | grep -c "#${SCRIPT_NAME}#")"
-			if [ "$STARTUPLINECOUNT" -gt 0 ]; then
+			if [ "$STARTUPLINECOUNT" -gt 0 ]
+			then
 				cru d "$SCRIPT_NAME"
 			fi
 			STARTUPLINECOUNTGEN="$(cru l | grep -c "#${SCRIPT_NAME}_generate#")"
-			if [ "$STARTUPLINECOUNTGEN" -gt 0 ]; then
+			if [ "$STARTUPLINECOUNTGEN" -gt 0 ]
+			then
 				cru d "${SCRIPT_NAME}_generate"
 			fi
 			STARTUPLINECOUNTTRIM="$(cru l | grep -c "#${SCRIPT_NAME}_trimDB#")"
-			if [ "$STARTUPLINECOUNTTRIM" -gt 0 ]; then
+			if [ "$STARTUPLINECOUNTTRIM" -gt 0 ]
+			then
 				cru d "${SCRIPT_NAME}_trimDB"
 			fi
 		;;
